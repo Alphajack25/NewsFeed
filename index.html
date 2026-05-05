@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#c8102e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Giacalone Podcast</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --surface2: #252540;
+      --accent: #c8102e;
+      --accent2: #1a6bb5;
+      --text: #f0f0f0;
+      --text2: #a0a0b0;
+      --border: #2e2e4a;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --player-height: 160px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 16px;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-title {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-title h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+
+    .header-title span {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 1px;
+    }
+
+    #refresh-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text2);
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      min-width: 48px;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: background 0.15s;
+    }
+
+    #refresh-btn:active { background: var(--surface2); }
+    #refresh-btn.loading svg { animation: spin 1s linear infinite; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── STATUS BAR ── */
+    #status-bar {
+      font-size: 12px;
+      color: var(--text2);
+      padding: 6px 16px;
+      background: var(--bg);
+      min-height: 24px;
+    }
+
+    /* ── EPISODE LIST ── */
+    #episode-list {
+      padding: 8px 0 calc(var(--player-height) + var(--safe-bottom) + 16px);
+    }
+
+    .episode-card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .episode-card:active { background: var(--surface); }
+    .episode-card.playing { background: var(--surface); }
+    .episode-card.playing .ep-title { color: var(--accent); }
+
+    .ep-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ep-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+
+    .ep-badge.opinione { background: var(--accent); color: #fff; }
+    .ep-badge.indignato { background: var(--accent2); color: #fff; }
+
+    .ep-date {
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .ep-title {
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.35;
+      color: var(--text);
+    }
+
+    .ep-footer {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ep-duration {
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .ep-playing-indicator {
+      display: none;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .playing .ep-playing-indicator { display: flex; }
+
+    .ep-playing-indicator span {
+      display: block;
+      width: 3px;
+      border-radius: 2px;
+      background: var(--accent);
+      animation: bar-bounce 0.8s ease-in-out infinite;
+    }
+
+    .ep-playing-indicator span:nth-child(1) { height: 8px; animation-delay: 0s; }
+    .ep-playing-indicator span:nth-child(2) { height: 14px; animation-delay: 0.15s; }
+    .ep-playing-indicator span:nth-child(3) { height: 6px; animation-delay: 0.3s; }
+
+    @keyframes bar-bounce {
+      0%, 100% { transform: scaleY(0.4); }
+      50% { transform: scaleY(1); }
+    }
+
+    /* ── SKELETON LOADER ── */
+    .skeleton-card {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .skeleton-line {
+      background: var(--surface);
+      border-radius: 4px;
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* ── ERROR STATE ── */
+    #error-msg {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    #error-msg p { color: var(--text2); font-size: 14px; line-height: 1.5; }
+
+    #retry-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 15px;
+      cursor: pointer;
+      min-height: 48px;
+    }
+
+    /* ── PLAYER ── */
+    #player {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 10px 16px calc(10px + var(--safe-bottom));
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #player-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-height: 36px;
+    }
+
+    #player-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #player-show {
+      font-size: 11px;
+      color: var(--text2);
+    }
+
+    #player-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .ctrl-btn {
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .ctrl-btn:active { background: var(--surface2); }
+    .ctrl-btn.skip { min-width: 48px; min-height: 48px; flex-direction: column; gap: 1px; }
+    .ctrl-btn.skip span { font-size: 9px; color: var(--text2); }
+    .ctrl-btn.skip svg { width: 22px; height: 22px; }
+
+    #btn-play-pause {
+      width: 56px;
+      height: 56px;
+      background: var(--accent);
+      border-radius: 50%;
+      color: #fff;
+    }
+
+    #btn-play-pause:active { background: #a00d24; }
+    #btn-play-pause svg { width: 28px; height: 28px; }
+
+    #player-progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .time-label {
+      font-size: 11px;
+      color: var(--text2);
+      min-width: 36px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #progress-bar {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+
+    #progress-bar::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 0 0 2px rgba(200,16,46,0.3);
+    }
+
+    #progress-bar::-webkit-slider-runnable-track {
+      height: 4px;
+      border-radius: 2px;
+    }
+
+    /* progress fill via JS updating --prog custom property */
+    #progress-bar {
+      background: linear-gradient(
+        to right,
+        var(--accent) 0%,
+        var(--accent) var(--prog, 0%),
+        var(--border) var(--prog, 0%),
+        var(--border) 100%
+      );
+    }
+
+    /* Idle state (no episode selected) */
+    #player.idle #player-controls,
+    #player.idle #player-progress { opacity: 0.35; pointer-events: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">
+    <h1>Giacalone</h1>
+    <span>RTL 102.5</span>
+  </div>
+  <button id="refresh-btn" title="Aggiorna">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </svg>
+  </button>
+</header>
+
+<div id="status-bar"></div>
+
+<main id="episode-list"></main>
+
+<div id="error-msg">
+  <p>Impossibile caricare gli episodi.<br>Verifica la connessione e riprova.</p>
+  <button id="retry-btn">Riprova</button>
+</div>
+
+<footer id="player" class="idle">
+  <div id="player-meta">
+    <div id="player-title">Nessun episodio selezionato</div>
+    <div id="player-show"></div>
+  </div>
+  <audio id="audio-el" preload="metadata"></audio>
+  <div id="player-controls">
+    <button class="ctrl-btn skip" id="btn-skip-back" title="-30 secondi">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-3"/>
+        <text x="12" y="14" text-anchor="middle" font-size="7" fill="currentColor" stroke="none" font-weight="bold">30</text>
+      </svg>
+      <span>indietro</span>
+    </button>
+    <button class="ctrl-btn" id="btn-play-pause" title="Play/Pausa">
+      <svg id="icon-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+      <svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+    </button>
+    <button class="ctrl-btn skip" id="btn-skip-fwd" title="+30 secondi">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-.49-3"/>
+        <text x="12" y="14" text-anchor="middle" font-size="7" fill="currentColor" stroke="none" font-weight="bold">30</text>
+      </svg>
+      <span>avanti</span>
+    </button>
+  </div>
+  <div id="player-progress">
+    <span class="time-label" id="time-current">0:00</span>
+    <input type="range" id="progress-bar" min="0" max="100" value="0" step="0.1">
+    <span class="time-label" id="time-total">0:00</span>
+  </div>
+</footer>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+// IMPORTANT: replace with your Cloudflare Worker URL after deploying worker.js
+const CF_WORKER = 'https://newsfeed.giacomosangalli25.workers.dev';
+
+const FEEDS = [
+  {
+    url: 'https://rss.rtl.it/podcast/l-opinione-di-davide-giacalone',
+    label: 'Opinione',
+    badgeClass: 'opinione',
+    audioOnly: false,
+  },
+  {
+    url: 'https://rss.rtl.it/podcast/l-indignato-speciale-il-podcast',
+    label: 'Indignato Speciale',
+    badgeClass: 'indignato',
+    audioOnly: true,  // filter out MP4 duplicates
+  },
+];
+
+const CACHE_KEY = 'episodes_v2';
+const CACHE_TS_KEY = 'episodes_ts_v2';
+const CACHE_TTL = 60 * 60 * 1000; // 60 minutes
+
+// ── UTILS ───────────────────────────────────────────────────────────────────
+function formatTime(sec) {
+  if (!sec || isNaN(sec) || !isFinite(sec)) return '0:00';
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = Math.floor(sec % 60);
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  return d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function parseDuration(str) {
+  if (!str) return 0;
+  const parts = str.split(':').map(Number);
+  if (parts.length === 3) return parts[0]*3600 + parts[1]*60 + parts[2];
+  if (parts.length === 2) return parts[0]*60 + parts[1];
+  return parseInt(str, 10) || 0;
+}
+
+function formatDuration(str) {
+  const sec = parseDuration(str);
+  if (!sec) return str || '';
+  return formatTime(sec);
+}
+
+// ── CORS PROXY ──────────────────────────────────────────────────────────────
+async function fetchWithProxy(feedUrl) {
+  const proxies = [
+    url => `${CF_WORKER}?url=${encodeURIComponent(url)}`,
+    url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  ];
+  let lastErr;
+  for (const buildUrl of proxies) {
+    try {
+      const res = await fetch(buildUrl(feedUrl), { signal: AbortSignal.timeout(8000) });
+      if (res.ok) return await res.text();
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error('All proxies failed');
+}
+
+// ── RSS PARSING ─────────────────────────────────────────────────────────────
+function parseRSS(xmlText, feed) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, 'application/xml');
+
+  const parseErr = doc.querySelector('parsererror');
+  if (parseErr) throw new Error('RSS parse error');
+
+  const items = Array.from(doc.querySelectorAll('item'));
+  const episodes = [];
+  const seenGuids = new Set();
+
+  for (const item of items) {
+    const enclosure = item.querySelector('enclosure');
+    if (!enclosure) continue;
+
+    const type = enclosure.getAttribute('type') || '';
+    if (feed.audioOnly && type !== 'audio/mpeg') continue;
+
+    const guid = item.querySelector('guid')?.textContent?.trim() ||
+                 enclosure.getAttribute('url');
+    if (seenGuids.has(guid)) continue;
+    seenGuids.add(guid);
+
+    const audioUrl = enclosure.getAttribute('url');
+    if (!audioUrl) continue;
+
+    const title = item.querySelector('title')?.textContent?.trim() || 'Episodio senza titolo';
+    const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
+    const duration = item.querySelector('duration')?.textContent?.trim() ||
+                     item.getElementsByTagNameNS('*', 'duration')[0]?.textContent?.trim() || '';
+    const description = item.querySelector('description')?.textContent?.trim() || '';
+
+    episodes.push({
+      guid,
+      title,
+      pubDate,
+      pubDateMs: pubDate ? new Date(pubDate).getTime() : 0,
+      duration,
+      audioUrl,
+      description,
+      label: feed.label,
+      badgeClass: feed.badgeClass,
+    });
+  }
+
+  return episodes;
+}
+
+// ── FETCH ALL FEEDS ─────────────────────────────────────────────────────────
+async function fetchAllEpisodes() {
+  const results = await Promise.allSettled(
+    FEEDS.map(feed =>
+      fetchWithProxy(feed.url).then(xml => parseRSS(xml, feed))
+    )
+  );
+
+  const all = [];
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') {
+      all.push(...r.value);
+    } else {
+      console.warn(`Feed ${FEEDS[i].label} failed:`, r.reason);
+    }
+  });
+
+  if (all.length === 0) throw new Error('No episodes loaded');
+
+  all.sort((a, b) => b.pubDateMs - a.pubDateMs);
+  return all;
+}
+
+// ── CACHE ───────────────────────────────────────────────────────────────────
+function saveCache(episodes) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(episodes));
+    localStorage.setItem(CACHE_TS_KEY, Date.now().toString());
+  } catch (e) { /* storage full — ignore */ }
+}
+
+function loadCache() {
+  try {
+    const ts = parseInt(localStorage.getItem(CACHE_TS_KEY) || '0', 10);
+    const data = localStorage.getItem(CACHE_KEY);
+    if (!data) return null;
+    return { episodes: JSON.parse(data), fresh: Date.now() - ts < CACHE_TTL };
+  } catch { return null; }
+}
+
+// ── PLAYER STATE ────────────────────────────────────────────────────────────
+const audio = document.getElementById('audio-el');
+let currentEpisode = null;
+let isDragging = false;
+let saveTimer = null;
+
+function savePosition(guid, time) {
+  try { localStorage.setItem(`pos_${guid}`, Math.floor(time).toString()); } catch {}
+}
+
+function loadPosition(guid) {
+  return parseInt(localStorage.getItem(`pos_${guid}`) || '0', 10);
+}
+
+function playEpisode(ep) {
+  currentEpisode = ep;
+
+  // Update player meta
+  document.getElementById('player-title').textContent = ep.title;
+  document.getElementById('player-show').textContent = ep.label + ' — RTL 102.5';
+  document.getElementById('player').classList.remove('idle');
+
+  // Set audio source
+  if (audio.src !== ep.audioUrl) {
+    audio.src = ep.audioUrl;
+    audio.load();
+    const savedPos = loadPosition(ep.guid);
+    if (savedPos > 10) {
+      audio.addEventListener('loadedmetadata', function onMeta() {
+        audio.currentTime = savedPos;
+        audio.removeEventListener('loadedmetadata', onMeta);
+      });
+    }
+  }
+
+  audio.play().catch(e => console.warn('Play failed:', e));
+  updatePlayingCard(ep.guid);
+  updateMediaSession(ep);
+}
+
+function updatePlayingCard(guid) {
+  document.querySelectorAll('.episode-card').forEach(card => {
+    card.classList.toggle('playing', card.dataset.guid === guid);
+  });
+}
+
+function setPlayPauseIcon(playing) {
+  document.getElementById('icon-play').style.display = playing ? 'none' : '';
+  document.getElementById('icon-pause').style.display = playing ? '' : 'none';
+}
+
+// ── AUDIO EVENTS ────────────────────────────────────────────────────────────
+audio.addEventListener('play', () => setPlayPauseIcon(true));
+audio.addEventListener('pause', () => setPlayPauseIcon(false));
+audio.addEventListener('ended', () => setPlayPauseIcon(false));
+
+audio.addEventListener('timeupdate', () => {
+  if (isDragging || !audio.duration) return;
+  const pct = (audio.currentTime / audio.duration) * 100;
+  const bar = document.getElementById('progress-bar');
+  bar.value = pct;
+  bar.style.setProperty('--prog', pct + '%');
+  document.getElementById('time-current').textContent = formatTime(audio.currentTime);
+
+  // Save position every ~10s
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    if (currentEpisode) savePosition(currentEpisode.guid, audio.currentTime);
+  }, 10000);
+});
+
+audio.addEventListener('loadedmetadata', () => {
+  document.getElementById('time-total').textContent = formatTime(audio.duration);
+});
+
+// ── PLAYER CONTROLS ─────────────────────────────────────────────────────────
+document.getElementById('btn-play-pause').addEventListener('click', () => {
+  if (!currentEpisode) return;
+  audio.paused ? audio.play() : audio.pause();
+});
+
+document.getElementById('btn-skip-back').addEventListener('click', () => {
+  if (!audio.src) return;
+  audio.currentTime = Math.max(0, audio.currentTime - 30);
+});
+
+document.getElementById('btn-skip-fwd').addEventListener('click', () => {
+  if (!audio.src) return;
+  audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 30);
+});
+
+const progressBar = document.getElementById('progress-bar');
+progressBar.addEventListener('pointerdown', () => { isDragging = true; });
+progressBar.addEventListener('input', () => {
+  if (!audio.duration) return;
+  const pct = parseFloat(progressBar.value);
+  progressBar.style.setProperty('--prog', pct + '%');
+  document.getElementById('time-current').textContent =
+    formatTime((pct / 100) * audio.duration);
+});
+progressBar.addEventListener('change', () => {
+  isDragging = false;
+  if (!audio.duration) return;
+  audio.currentTime = (parseFloat(progressBar.value) / 100) * audio.duration;
+  if (currentEpisode) savePosition(currentEpisode.guid, audio.currentTime);
+});
+
+// ── MEDIA SESSION API ────────────────────────────────────────────────────────
+function updateMediaSession(ep) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: ep.title,
+    artist: 'Davide Giacalone — RTL 102.5',
+    album: ep.label,
+    artwork: [
+      { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+      { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+  });
+  navigator.mediaSession.setActionHandler('play', () => audio.play());
+  navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+  navigator.mediaSession.setActionHandler('seekbackward', () => {
+    audio.currentTime = Math.max(0, audio.currentTime - 30);
+  });
+  navigator.mediaSession.setActionHandler('seekforward', () => {
+    audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 30);
+  });
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function showSkeleton() {
+  const list = document.getElementById('episode-list');
+  list.innerHTML = Array.from({ length: 6 }, () => `
+    <div class="skeleton-card">
+      <div class="skeleton-line" style="height:12px; width:30%"></div>
+      <div class="skeleton-line" style="height:16px; width:85%"></div>
+      <div class="skeleton-line" style="height:16px; width:65%"></div>
+      <div class="skeleton-line" style="height:11px; width:20%"></div>
+    </div>
+  `).join('');
+}
+
+function renderEpisodes(episodes) {
+  const list = document.getElementById('episode-list');
+  if (!episodes.length) {
+    list.innerHTML = '<p style="padding:32px;text-align:center;color:var(--text2)">Nessun episodio trovato.</p>';
+    return;
+  }
+
+  list.innerHTML = episodes.map(ep => `
+    <div class="episode-card" data-guid="${ep.guid.replace(/"/g, '&quot;')}"
+         role="button" tabindex="0" aria-label="Riproduci ${ep.title}">
+      <div class="ep-header">
+        <span class="ep-badge ${ep.badgeClass}">${ep.label === 'Opinione' ? 'Opinione' : 'Indignato'}</span>
+        <span class="ep-date">${formatDate(ep.pubDate)}</span>
+      </div>
+      <div class="ep-title">${ep.title}</div>
+      <div class="ep-footer">
+        ${ep.duration ? `<span class="ep-duration">${formatDuration(ep.duration)}</span>` : ''}
+        <div class="ep-playing-indicator" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Re-attach click handlers
+  list.querySelectorAll('.episode-card').forEach((card, i) => {
+    card.addEventListener('click', () => playEpisode(episodes[i]));
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') playEpisode(episodes[i]);
+    });
+  });
+
+  // Restore playing card highlight if any
+  if (currentEpisode) updatePlayingCard(currentEpisode.guid);
+}
+
+function showError(show) {
+  document.getElementById('error-msg').style.display = show ? 'flex' : 'none';
+  document.getElementById('episode-list').style.display = show ? 'none' : '';
+}
+
+function setStatus(msg) {
+  document.getElementById('status-bar').textContent = msg;
+}
+
+// ── MAIN LOAD ────────────────────────────────────────────────────────────────
+async function loadEpisodes(force = false) {
+  const refreshBtn = document.getElementById('refresh-btn');
+  refreshBtn.classList.add('loading');
+  showError(false);
+
+  // Show cached data immediately
+  const cached = loadCache();
+  if (cached) {
+    renderEpisodes(cached.episodes);
+    setStatus(`${cached.episodes.length} episodi — aggiornato in cache`);
+    if (!force && cached.fresh) {
+      refreshBtn.classList.remove('loading');
+      return;
+    }
+    setStatus('Aggiornamento in corso…');
+  } else {
+    showSkeleton();
+    setStatus('Caricamento episodi…');
+  }
+
+  try {
+    const episodes = await fetchAllEpisodes();
+    saveCache(episodes);
+    renderEpisodes(episodes);
+    const last = episodes[0] ? formatDate(episodes[0].pubDate) : '';
+    setStatus(`${episodes.length} episodi · ultimo: ${last}`);
+  } catch (err) {
+    console.error('Load failed:', err);
+    if (!cached) {
+      showError(true);
+      setStatus('');
+    } else {
+      setStatus('Aggiornamento fallito — mostrando cache');
+    }
+  } finally {
+    refreshBtn.classList.remove('loading');
+  }
+}
+
+document.getElementById('refresh-btn').addEventListener('click', () => loadEpisodes(true));
+document.getElementById('retry-btn').addEventListener('click', () => loadEpisodes(true));
+
+// Service worker registration
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(e => console.warn('SW:', e));
+}
+
+// Initial load
+loadEpisodes();
+</script>
+</body>
+</html>
