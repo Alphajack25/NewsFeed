@@ -7,7 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Giacalone Podcast</title>
+  <title>News &amp; Sets</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png">
   <style>
@@ -19,8 +19,10 @@
       --surface2: #252540;
       --accent: #c8102e;
       --accent2: #1a6bb5;
+      --accent3: #2d8f4e;
       --text: #f0f0f0;
       --text2: #a0a0b0;
+      --text3: #6a6a80;
       --border: #2e2e4a;
       --safe-bottom: env(safe-area-inset-bottom, 0px);
       --player-height: 160px;
@@ -43,21 +45,18 @@
       z-index: 10;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      padding: 14px 16px 12px;
+    }
+
+    .header-top {
+      padding: 14px 16px 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .header-title {
-      display: flex;
-      flex-direction: column;
-    }
-
     .header-title h1 {
       font-size: 18px;
       font-weight: 700;
-      color: var(--text);
       letter-spacing: -0.3px;
     }
 
@@ -65,6 +64,7 @@
       font-size: 12px;
       color: var(--text2);
       margin-top: 1px;
+      display: block;
     }
 
     #refresh-btn {
@@ -73,21 +73,56 @@
       border-radius: 8px;
       color: var(--text2);
       padding: 8px 12px;
-      font-size: 13px;
       cursor: pointer;
-      min-width: 48px;
-      min-height: 48px;
+      min-width: 44px;
+      min-height: 44px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      transition: background 0.15s;
     }
 
     #refresh-btn:active { background: var(--surface2); }
     #refresh-btn.loading svg { animation: spin 1s linear infinite; }
-
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      padding: 0 8px;
+    }
+
+    .tab {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text2);
+      padding: 12px 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .tab.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-count {
+      font-size: 11px;
+      background: var(--surface2);
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+
+    .tab.active .tab-count { background: var(--accent); color: #fff; }
 
     /* ── STATUS BAR ── */
     #status-bar {
@@ -98,11 +133,15 @@
       min-height: 24px;
     }
 
-    /* ── EPISODE LIST ── */
-    #episode-list {
-      padding: 8px 0 calc(var(--player-height) + var(--safe-bottom) + 16px);
+    /* ── LISTS (shared) ── */
+    .list {
+      padding: 4px 0 calc(var(--player-height) + var(--safe-bottom) + 16px);
+      display: none;
     }
 
+    .list.active { display: block; }
+
+    /* ── EPISODE CARD (Giacalone) ── */
     .episode-card {
       display: flex;
       flex-direction: column;
@@ -137,29 +176,12 @@
 
     .ep-badge.opinione { background: var(--accent); color: #fff; }
     .ep-badge.indignato { background: var(--accent2); color: #fff; }
+    .ep-badge.deejaytime { background: #f06423; color: #fff; }
 
-    .ep-date {
-      font-size: 12px;
-      color: var(--text2);
-    }
-
-    .ep-title {
-      font-size: 15px;
-      font-weight: 500;
-      line-height: 1.35;
-      color: var(--text);
-    }
-
-    .ep-footer {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .ep-duration {
-      font-size: 12px;
-      color: var(--text2);
-    }
+    .ep-date { font-size: 12px; color: var(--text2); }
+    .ep-title { font-size: 15px; font-weight: 500; line-height: 1.35; }
+    .ep-footer { display: flex; align-items: center; gap: 12px; }
+    .ep-duration { font-size: 12px; color: var(--text2); }
 
     .ep-playing-indicator {
       display: none;
@@ -186,7 +208,130 @@
       50% { transform: scaleY(1); }
     }
 
-    /* ── SKELETON LOADER ── */
+    /* ── SET CARD (DJ Sets) ── */
+    .set-card {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .set-card.playing { background: var(--surface); }
+    .set-card.playing .set-title { color: var(--accent); }
+
+    .set-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .set-info {
+      flex: 1;
+      min-width: 0;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .set-title {
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.35;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .set-meta {
+      font-size: 12px;
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .set-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .set-status.offline { color: var(--accent3); }
+    .set-status.streaming { color: var(--text3); }
+
+    .set-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .set-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .set-btn:active { background: var(--surface2); }
+    .set-btn.download { color: var(--accent); border-color: var(--accent); }
+    .set-btn.delete { color: var(--text3); }
+
+    .set-progress {
+      margin-top: 10px;
+      display: none;
+    }
+
+    .set-card.downloading .set-progress { display: block; }
+    .set-card.downloading .set-btn.download { display: none; }
+
+    .progress-track {
+      height: 4px;
+      background: var(--surface2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.2s;
+    }
+
+    .progress-label {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 4px;
+    }
+
+    /* ── EMPTY / ERROR ── */
+    .empty-state {
+      padding: 40px 24px;
+      text-align: center;
+      color: var(--text2);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .empty-state code {
+      background: var(--surface);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    /* ── SKELETON ── */
     .skeleton-card {
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
@@ -206,28 +351,18 @@
       50% { opacity: 1; }
     }
 
-    /* ── ERROR STATE ── */
-    #error-msg {
+    /* ── STORAGE BAR (DJ Sets only) ── */
+    #storage-info {
       display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      padding: 40px 24px;
-      text-align: center;
+      padding: 8px 16px;
+      font-size: 11px;
+      color: var(--text2);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
     }
 
-    #error-msg p { color: var(--text2); font-size: 14px; line-height: 1.5; }
-
-    #retry-btn {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 12px 24px;
-      font-size: 15px;
-      cursor: pointer;
-      min-height: 48px;
-    }
+    .tab-sets.active ~ #storage-info,
+    body.tab-sets-active #storage-info { display: block; }
 
     /* ── PLAYER ── */
     #player {
@@ -254,16 +389,12 @@
     #player-title {
       font-size: 13px;
       font-weight: 500;
-      color: var(--text);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    #player-show {
-      font-size: 11px;
-      color: var(--text2);
-    }
+    #player-show { font-size: 11px; color: var(--text2); }
 
     #player-controls {
       display: flex;
@@ -281,7 +412,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.1s;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -321,9 +451,15 @@
       appearance: none;
       height: 4px;
       border-radius: 2px;
-      background: var(--border);
       outline: none;
       cursor: pointer;
+      background: linear-gradient(
+        to right,
+        var(--accent) 0%,
+        var(--accent) var(--prog, 0%),
+        var(--border) var(--prog, 0%),
+        var(--border) 100%
+      );
     }
 
     #progress-bar::-webkit-slider-thumb {
@@ -336,23 +472,6 @@
       box-shadow: 0 0 0 2px rgba(200,16,46,0.3);
     }
 
-    #progress-bar::-webkit-slider-runnable-track {
-      height: 4px;
-      border-radius: 2px;
-    }
-
-    /* progress fill via JS updating --prog custom property */
-    #progress-bar {
-      background: linear-gradient(
-        to right,
-        var(--accent) 0%,
-        var(--accent) var(--prog, 0%),
-        var(--border) var(--prog, 0%),
-        var(--border) 100%
-      );
-    }
-
-    /* Idle state (no episode selected) */
     #player.idle #player-controls,
     #player.idle #player-progress { opacity: 0.35; pointer-events: none; }
   </style>
@@ -360,26 +479,39 @@
 <body>
 
 <header>
-  <div class="header-title">
-    <h1>Giacalone</h1>
-    <span>RTL 102.5</span>
+  <div class="header-top">
+    <div class="header-title">
+      <h1>News &amp; Sets</h1>
+      <span id="header-subtitle">RTL 102.5 · DJ Mixes</span>
+    </div>
+    <button id="refresh-btn" title="Aggiorna">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+    </button>
   </div>
-  <button id="refresh-btn" title="Aggiorna">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-    </svg>
-  </button>
+  <div class="tabs">
+    <button class="tab tab-giacalone active" data-tab="giacalone">
+      Giacalone <span class="tab-count" id="count-giacalone">0</span>
+    </button>
+    <button class="tab tab-deejaytime" data-tab="deejaytime">
+      Deejay Time <span class="tab-count" id="count-deejaytime">0</span>
+    </button>
+    <button class="tab tab-sets" data-tab="sets">
+      DJ Sets <span class="tab-count" id="count-sets">0</span>
+    </button>
+  </div>
 </header>
 
 <div id="status-bar"></div>
+<div id="storage-info">Spazio offline: <span id="storage-used">—</span></div>
 
-<main id="episode-list"></main>
-
-<div id="error-msg">
-  <p>Impossibile caricare gli episodi.<br>Verifica la connessione e riprova.</p>
-  <button id="retry-btn">Riprova</button>
-</div>
+<main>
+  <section id="episode-list" class="list active" data-list="giacalone"></section>
+  <section id="deejaytime-list" class="list" data-list="deejaytime"></section>
+  <section id="set-list" class="list" data-list="sets"></section>
+</main>
 
 <footer id="player" class="idle">
   <div id="player-meta">
@@ -415,30 +547,37 @@
 </footer>
 
 <script>
-// ── CONFIG ─────────────────────────────────────────────────────────────────
-// IMPORTANT: replace with your Cloudflare Worker URL after deploying worker.js
+// ═══════════════════════════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Cloudflare Worker (CORS proxy for RTL RSS feeds)
 const CF_WORKER = 'https://newsfeed.giacomosangalli25.workers.dev';
 
+// Cloudflare R2 bucket public URL — REPLACE with your bucket's r2.dev URL
+// Example: 'https://pub-abc123.r2.dev'
+const R2_BASE = 'https://YOUR-R2-BUCKET.r2.dev';
+
 const FEEDS = [
-  {
-    url: 'https://rss.rtl.it/podcast/l-opinione-di-davide-giacalone',
-    label: 'Opinione',
-    badgeClass: 'opinione',
-    audioOnly: false,
-  },
-  {
-    url: 'https://rss.rtl.it/podcast/l-indignato-speciale-il-podcast',
-    label: 'Indignato Speciale',
-    badgeClass: 'indignato',
-    audioOnly: true,  // filter out MP4 duplicates
-  },
+  { url: 'https://rss.rtl.it/podcast/l-opinione-di-davide-giacalone', label: 'Opinione', badgeClass: 'opinione', audioOnly: true },
+  { url: 'https://rss.rtl.it/podcast/l-indignato-speciale-il-podcast', label: 'Indignato Speciale', badgeClass: 'indignato', audioOnly: true },
 ];
 
-const CACHE_KEY = 'episodes_v2';
-const CACHE_TS_KEY = 'episodes_ts_v2';
-const CACHE_TTL = 60 * 60 * 1000; // 60 minutes
+const DEEJAY_TIME_INDEX = 'https://www.m2o.it/programmi/deejay-time/puntate/';
 
-// ── UTILS ───────────────────────────────────────────────────────────────────
+const EP_CACHE_KEY = 'episodes_v2';
+const EP_CACHE_TS  = 'episodes_ts_v2';
+const DEEJAY_TIME_CACHE_KEY = 'deejay_time_episodes_v1';
+const DEEJAY_TIME_CACHE_TS  = 'deejay_time_episodes_ts_v1';
+const SETS_CACHE_KEY = 'sets_manifest_v1';
+const SETS_CACHE_TS  = 'sets_manifest_ts_v1';
+const CACHE_TTL = 60 * 60 * 1000;
+const DJ_CACHE_NAME = 'dj-sets-v1';
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════
+
 function formatTime(sec) {
   if (!sec || isNaN(sec) || !isFinite(sec)) return '0:00';
   const h = Math.floor(sec / 3600);
@@ -457,7 +596,8 @@ function formatDate(dateStr) {
 
 function parseDuration(str) {
   if (!str) return 0;
-  const parts = str.split(':').map(Number);
+  if (typeof str === 'number') return str;
+  const parts = String(str).split(':').map(Number);
   if (parts.length === 3) return parts[0]*3600 + parts[1]*60 + parts[2];
   if (parts.length === 2) return parts[0]*60 + parts[1];
   return parseInt(str, 10) || 0;
@@ -465,11 +605,26 @@ function parseDuration(str) {
 
 function formatDuration(str) {
   const sec = parseDuration(str);
-  if (!sec) return str || '';
+  if (!sec) return '';
   return formatTime(sec);
 }
 
-// ── CORS PROXY ──────────────────────────────────────────────────────────────
+function formatBytes(b) {
+  if (!b) return '0 B';
+  const u = ['B', 'KB', 'MB', 'GB'];
+  let i = 0;
+  while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+  return `${b.toFixed(i === 0 ? 0 : 1)} ${u[i]}`;
+}
+
+function escHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  CORS PROXY
+// ═══════════════════════════════════════════════════════════════════════════
+
 async function fetchWithProxy(feedUrl) {
   const proxies = [
     url => `${CF_WORKER}?url=${encodeURIComponent(url)}`,
@@ -486,98 +641,225 @@ async function fetchWithProxy(feedUrl) {
   throw lastErr || new Error('All proxies failed');
 }
 
-// ── RSS PARSING ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+//  RSS PARSING (Giacalone)
+// ═══════════════════════════════════════════════════════════════════════════
+
 function parseRSS(xmlText, feed) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlText, 'application/xml');
-
-  const parseErr = doc.querySelector('parsererror');
-  if (parseErr) throw new Error('RSS parse error');
+  if (doc.querySelector('parsererror')) throw new Error('RSS parse error');
 
   const items = Array.from(doc.querySelectorAll('item'));
   const episodes = [];
-  const seenGuids = new Set();
+  const seen = new Set();
 
   for (const item of items) {
     const enclosure = item.querySelector('enclosure');
     if (!enclosure) continue;
-
     const type = enclosure.getAttribute('type') || '';
     if (feed.audioOnly && type !== 'audio/mpeg') continue;
 
-    const guid = item.querySelector('guid')?.textContent?.trim() ||
-                 enclosure.getAttribute('url');
-    if (seenGuids.has(guid)) continue;
-    seenGuids.add(guid);
+    const guid = item.querySelector('guid')?.textContent?.trim() || enclosure.getAttribute('url');
+    if (seen.has(guid)) continue;
+    seen.add(guid);
 
     const audioUrl = enclosure.getAttribute('url');
     if (!audioUrl) continue;
 
-    const title = item.querySelector('title')?.textContent?.trim() || 'Episodio senza titolo';
+    const title = item.querySelector('title')?.textContent?.trim() || 'Episodio';
     const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
     const duration = item.querySelector('duration')?.textContent?.trim() ||
                      item.getElementsByTagNameNS('*', 'duration')[0]?.textContent?.trim() || '';
-    const description = item.querySelector('description')?.textContent?.trim() || '';
 
     episodes.push({
-      guid,
-      title,
-      pubDate,
+      kind: 'episode',
+      guid, title, pubDate,
       pubDateMs: pubDate ? new Date(pubDate).getTime() : 0,
-      duration,
-      audioUrl,
-      description,
+      duration, audioUrl,
       label: feed.label,
       badgeClass: feed.badgeClass,
     });
   }
-
   return episodes;
 }
 
-// ── FETCH ALL FEEDS ─────────────────────────────────────────────────────────
 async function fetchAllEpisodes() {
   const results = await Promise.allSettled(
-    FEEDS.map(feed =>
-      fetchWithProxy(feed.url).then(xml => parseRSS(xml, feed))
-    )
+    FEEDS.map(f => fetchWithProxy(f.url).then(xml => parseRSS(xml, f)))
   );
-
   const all = [];
   results.forEach((r, i) => {
-    if (r.status === 'fulfilled') {
-      all.push(...r.value);
-    } else {
-      console.warn(`Feed ${FEEDS[i].label} failed:`, r.reason);
-    }
+    if (r.status === 'fulfilled') all.push(...r.value);
+    else console.warn(`Feed ${FEEDS[i].label} failed:`, r.reason);
   });
-
   if (all.length === 0) throw new Error('No episodes loaded');
-
   all.sort((a, b) => b.pubDateMs - a.pubDateMs);
   return all;
 }
 
-// ── CACHE ───────────────────────────────────────────────────────────────────
-function saveCache(episodes) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(episodes));
-    localStorage.setItem(CACHE_TS_KEY, Date.now().toString());
-  } catch (e) { /* storage full — ignore */ }
+// ═══════════════════════════════════════════════════════════════════════════
+//  DJ SETS (R2 manifest)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Deejay Time is published as HTML pages rather than an RSS feed.
+async function fetchM2oPage(pageUrl) {
+  const res = await fetch(`${CF_WORKER}?url=${encodeURIComponent(pageUrl)}`, {
+    signal: AbortSignal.timeout(12000),
+  });
+  if (!res.ok) throw new Error(`m2o proxy failed: ${res.status}`);
+  return await res.text();
 }
 
-function loadCache() {
+function parseDeejayTimeEpisode(html, pageUrl) {
+  const dateMatch = pageUrl.match(/deejay-time-del-(\d{2})-(\d{2})-(\d{4})/i);
+  const audioMatch = html.match(/"audio_url"\s*:\s*"([^"]+)"/i);
+  if (!dateMatch || !audioMatch) return null;
+
+  const [, day, month, year] = dateMatch;
+  const duration = html.match(/"duration"\s*:\s*"([^"]+)"/i)?.[1] || '';
+  const audioUrl = audioMatch[1].replace(/\\\//g, '/');
+  const pubDate = `${year}-${month}-${day}T14:00:00`;
+
+  return {
+    kind: 'deejaytime',
+    guid: pageUrl,
+    title: `Puntata del ${day}/${month}/${year}`,
+    pubDate,
+    pubDateMs: new Date(pubDate).getTime(),
+    duration,
+    audioUrl,
+    label: 'Deejay Time',
+    badgeClass: 'deejaytime',
+    sourceUrl: pageUrl,
+  };
+}
+
+async function fetchDeejayTimeEpisodes() {
+  const indexHtml = await fetchM2oPage(DEEJAY_TIME_INDEX);
+  const doc = new DOMParser().parseFromString(indexHtml, 'text/html');
+  const pageUrls = [...new Set(
+    Array.from(doc.querySelectorAll('a[href*="/programmi/deejay-time/puntate/deejay-time-del-"]'))
+      .map(a => new URL(a.getAttribute('href'), DEEJAY_TIME_INDEX).href)
+  )].slice(0, 24);
+
+  if (!pageUrls.length) throw new Error('No Deejay Time episode links found');
+  const results = await Promise.allSettled(
+    pageUrls.map(pageUrl => fetchM2oPage(pageUrl).then(html => parseDeejayTimeEpisode(html, pageUrl)))
+  );
+  const episodes = results
+    .filter(r => r.status === 'fulfilled' && r.value)
+    .map(r => r.value)
+    .sort((a, b) => b.pubDateMs - a.pubDateMs);
+  if (!episodes.length) throw new Error('No Deejay Time episodes loaded');
+  return episodes;
+}
+
+async function fetchSetsManifest() {
+  if (R2_BASE.includes('YOUR-R2-BUCKET')) throw new Error('R2_BASE not configured');
+  const res = await fetch(`${R2_BASE}/sets.json`, { cache: 'no-cache' });
+  if (!res.ok) throw new Error(`Manifest fetch failed: ${res.status}`);
+  const data = await res.json();
+  const sets = (data.sets || []).map(s => ({
+    kind: 'set',
+    guid: s.id || s.file,
+    title: s.title || s.file,
+    artist: s.artist || '',
+    pubDate: s.date || '',
+    pubDateMs: s.date ? new Date(s.date).getTime() : 0,
+    duration: s.duration || '',
+    size: s.size || 0,
+    audioUrl: `${R2_BASE}/${s.file}`,
+    label: 'DJ Set',
+  }));
+  sets.sort((a, b) => b.pubDateMs - a.pubDateMs);
+  return sets;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  LOCAL CACHE (small key/value)
+// ═══════════════════════════════════════════════════════════════════════════
+
+function saveCache(key, tsKey, data) {
   try {
-    const ts = parseInt(localStorage.getItem(CACHE_TS_KEY) || '0', 10);
-    const data = localStorage.getItem(CACHE_KEY);
+    localStorage.setItem(key, JSON.stringify(data));
+    localStorage.setItem(tsKey, Date.now().toString());
+  } catch {}
+}
+
+function loadCache(key, tsKey) {
+  try {
+    const ts = parseInt(localStorage.getItem(tsKey) || '0', 10);
+    const data = localStorage.getItem(key);
     if (!data) return null;
-    return { episodes: JSON.parse(data), fresh: Date.now() - ts < CACHE_TTL };
+    return { data: JSON.parse(data), fresh: Date.now() - ts < CACHE_TTL };
   } catch { return null; }
 }
 
-// ── PLAYER STATE ────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+//  DJ SET DOWNLOAD / CACHE API
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function isSetCached(url) {
+  try {
+    const cache = await caches.open(DJ_CACHE_NAME);
+    const match = await cache.match(url);
+    return !!match;
+  } catch { return false; }
+}
+
+async function downloadSet(set, onProgress) {
+  const cache = await caches.open(DJ_CACHE_NAME);
+  const response = await fetch(set.audioUrl);
+  if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+
+  const total = parseInt(response.headers.get('content-length') || '0', 10);
+  const reader = response.body.getReader();
+  const chunks = [];
+  let received = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    received += value.length;
+    if (onProgress) onProgress(received, total);
+  }
+
+  const blob = new Blob(chunks, { type: 'audio/mpeg' });
+  const cachedResponse = new Response(blob, {
+    headers: {
+      'Content-Type': 'audio/mpeg',
+      'Content-Length': String(blob.size),
+    },
+  });
+  await cache.put(set.audioUrl, cachedResponse);
+  return blob.size;
+}
+
+async function deleteSet(set) {
+  const cache = await caches.open(DJ_CACHE_NAME);
+  await cache.delete(set.audioUrl);
+  try { localStorage.removeItem(`pos_${set.guid}`); } catch {}
+}
+
+async function updateStorageInfo() {
+  if (!navigator.storage?.estimate) return;
+  try {
+    const est = await navigator.storage.estimate();
+    const cache = await caches.open(DJ_CACHE_NAME);
+    const keys = await cache.keys();
+    document.getElementById('storage-used').textContent =
+      `${keys.length} set · ${formatBytes(est.usage || 0)} su ${formatBytes(est.quota || 0)} disponibili`;
+  } catch (e) { console.warn(e); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  PLAYER
+// ═══════════════════════════════════════════════════════════════════════════
+
 const audio = document.getElementById('audio-el');
-let currentEpisode = null;
+let currentItem = null;
 let isDragging = false;
 let saveTimer = null;
 
@@ -589,19 +871,21 @@ function loadPosition(guid) {
   return parseInt(localStorage.getItem(`pos_${guid}`) || '0', 10);
 }
 
-function playEpisode(ep) {
-  currentEpisode = ep;
-
-  // Update player meta
-  document.getElementById('player-title').textContent = ep.title;
-  document.getElementById('player-show').textContent = ep.label + ' — RTL 102.5';
+function playItem(item) {
+  currentItem = item;
+  document.getElementById('player-title').textContent = item.title;
+  document.getElementById('player-show').textContent =
+    item.kind === 'deejaytime'
+      ? 'Deejay Time - m2o'
+      : item.kind === 'set'
+      ? (item.artist ? `${item.artist} — DJ Set` : 'DJ Set')
+      : `${item.label} — RTL 102.5`;
   document.getElementById('player').classList.remove('idle');
 
-  // Set audio source
-  if (audio.src !== ep.audioUrl) {
-    audio.src = ep.audioUrl;
+  if (audio.src !== item.audioUrl) {
+    audio.src = item.audioUrl;
     audio.load();
-    const savedPos = loadPosition(ep.guid);
+    const savedPos = loadPosition(item.guid);
     if (savedPos > 10) {
       audio.addEventListener('loadedmetadata', function onMeta() {
         audio.currentTime = savedPos;
@@ -611,12 +895,12 @@ function playEpisode(ep) {
   }
 
   audio.play().catch(e => console.warn('Play failed:', e));
-  updatePlayingCard(ep.guid);
-  updateMediaSession(ep);
+  updatePlayingHighlight(item.guid);
+  updateMediaSession(item);
 }
 
-function updatePlayingCard(guid) {
-  document.querySelectorAll('.episode-card').forEach(card => {
+function updatePlayingHighlight(guid) {
+  document.querySelectorAll('.episode-card, .set-card, .deejaytime-card').forEach(card => {
     card.classList.toggle('playing', card.dataset.guid === guid);
   });
 }
@@ -626,7 +910,6 @@ function setPlayPauseIcon(playing) {
   document.getElementById('icon-pause').style.display = playing ? '' : 'none';
 }
 
-// ── AUDIO EVENTS ────────────────────────────────────────────────────────────
 audio.addEventListener('play', () => setPlayPauseIcon(true));
 audio.addEventListener('pause', () => setPlayPauseIcon(false));
 audio.addEventListener('ended', () => setPlayPauseIcon(false));
@@ -638,11 +921,9 @@ audio.addEventListener('timeupdate', () => {
   bar.value = pct;
   bar.style.setProperty('--prog', pct + '%');
   document.getElementById('time-current').textContent = formatTime(audio.currentTime);
-
-  // Save position every ~10s
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
-    if (currentEpisode) savePosition(currentEpisode.guid, audio.currentTime);
+    if (currentItem) savePosition(currentItem.guid, audio.currentTime);
   }, 10000);
 });
 
@@ -650,9 +931,8 @@ audio.addEventListener('loadedmetadata', () => {
   document.getElementById('time-total').textContent = formatTime(audio.duration);
 });
 
-// ── PLAYER CONTROLS ─────────────────────────────────────────────────────────
 document.getElementById('btn-play-pause').addEventListener('click', () => {
-  if (!currentEpisode) return;
+  if (!currentItem) return;
   audio.paused ? audio.play() : audio.pause();
 });
 
@@ -672,23 +952,25 @@ progressBar.addEventListener('input', () => {
   if (!audio.duration) return;
   const pct = parseFloat(progressBar.value);
   progressBar.style.setProperty('--prog', pct + '%');
-  document.getElementById('time-current').textContent =
-    formatTime((pct / 100) * audio.duration);
+  document.getElementById('time-current').textContent = formatTime((pct / 100) * audio.duration);
 });
 progressBar.addEventListener('change', () => {
   isDragging = false;
   if (!audio.duration) return;
   audio.currentTime = (parseFloat(progressBar.value) / 100) * audio.duration;
-  if (currentEpisode) savePosition(currentEpisode.guid, audio.currentTime);
+  if (currentItem) savePosition(currentItem.guid, audio.currentTime);
 });
 
-// ── MEDIA SESSION API ────────────────────────────────────────────────────────
-function updateMediaSession(ep) {
+function updateMediaSession(item) {
   if (!('mediaSession' in navigator)) return;
   navigator.mediaSession.metadata = new MediaMetadata({
-    title: ep.title,
-    artist: 'Davide Giacalone — RTL 102.5',
-    album: ep.label,
+    title: item.title,
+    artist: item.kind === 'deejaytime'
+      ? 'Deejay Time — m2o'
+      : item.kind === 'set'
+        ? (item.artist || 'DJ Set')
+        : 'Davide Giacalone — RTL 102.5',
+    album: item.label,
     artwork: [
       { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
       { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
@@ -704,114 +986,311 @@ function updateMediaSession(ep) {
   });
 }
 
-// ── RENDER ───────────────────────────────────────────────────────────────────
-function showSkeleton() {
+// ═══════════════════════════════════════════════════════════════════════════
+//  RENDER — Giacalone episodes
+// ═══════════════════════════════════════════════════════════════════════════
+
+function renderEpisodes(eps) {
   const list = document.getElementById('episode-list');
-  list.innerHTML = Array.from({ length: 6 }, () => `
-    <div class="skeleton-card">
-      <div class="skeleton-line" style="height:12px; width:30%"></div>
-      <div class="skeleton-line" style="height:16px; width:85%"></div>
-      <div class="skeleton-line" style="height:16px; width:65%"></div>
-      <div class="skeleton-line" style="height:11px; width:20%"></div>
+  document.getElementById('count-giacalone').textContent = eps.length;
+  if (!eps.length) {
+    list.innerHTML = '<p class="empty-state">Nessun episodio trovato.</p>';
+    return;
+  }
+  list.innerHTML = eps.map(ep => `
+    <div class="episode-card" data-guid="${escHtml(ep.guid)}" role="button" tabindex="0">
+      <div class="ep-header">
+        <span class="ep-badge ${ep.badgeClass}">${ep.label === 'Opinione' ? 'Opinione' : 'Indignato'}</span>
+        <span class="ep-date">${escHtml(formatDate(ep.pubDate))}</span>
+      </div>
+      <div class="ep-title">${escHtml(ep.title)}</div>
+      <div class="ep-footer">
+        ${ep.duration ? `<span class="ep-duration">${formatDuration(ep.duration)}</span>` : ''}
+        <div class="ep-playing-indicator"><span></span><span></span><span></span></div>
+      </div>
     </div>
   `).join('');
+  list.querySelectorAll('.episode-card').forEach((card, i) => {
+    card.addEventListener('click', () => playItem(eps[i]));
+  });
+  if (currentItem) updatePlayingHighlight(currentItem.guid);
 }
 
-function renderEpisodes(episodes) {
-  const list = document.getElementById('episode-list');
-  if (!episodes.length) {
-    list.innerHTML = '<p style="padding:32px;text-align:center;color:var(--text2)">Nessun episodio trovato.</p>';
+// ═══════════════════════════════════════════════════════════════════════════
+//  RENDER — DJ Sets
+// ═══════════════════════════════════════════════════════════════════════════
+
+function renderDeejayTimeEpisodes(eps) {
+  const list = document.getElementById('deejaytime-list');
+  document.getElementById('count-deejaytime').textContent = eps.length;
+  if (!eps.length) {
+    list.innerHTML = '<p class="empty-state">Nessuna puntata di Deejay Time trovata.</p>';
+    return;
+  }
+  list.innerHTML = eps.map(ep => `
+    <div class="episode-card deejaytime-card" data-guid="${escHtml(ep.guid)}" role="button" tabindex="0">
+      <div class="ep-header">
+        <span class="ep-badge deejaytime">Deejay Time</span>
+        <span class="ep-date">${escHtml(formatDate(ep.pubDate))}</span>
+      </div>
+      <div class="ep-title">${escHtml(ep.title)}</div>
+      <div class="ep-footer">
+        ${ep.duration ? `<span class="ep-duration">${formatDuration(ep.duration)}</span>` : ''}
+        <div class="ep-playing-indicator"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.deejaytime-card').forEach((card, i) => {
+    card.addEventListener('click', () => playItem(eps[i]));
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') playItem(eps[i]);
+    });
+  });
+  if (currentItem) updatePlayingHighlight(currentItem.guid);
+}
+
+async function renderSets(sets) {
+  const list = document.getElementById('set-list');
+  document.getElementById('count-sets').textContent = sets.length;
+
+  if (R2_BASE.includes('YOUR-R2-BUCKET')) {
+    list.innerHTML = `
+      <p class="empty-state">
+        Per attivare i DJ Sets:<br><br>
+        1. Crea un bucket R2 su Cloudflare<br>
+        2. Attiva il public URL (<code>r2.dev</code>)<br>
+        3. Carica i tuoi MP3 + un file <code>sets.json</code><br>
+        4. Sostituisci <code>R2_BASE</code> nel codice<br>
+      </p>`;
     return;
   }
 
-  list.innerHTML = episodes.map(ep => `
-    <div class="episode-card" data-guid="${ep.guid.replace(/"/g, '&quot;')}"
-         role="button" tabindex="0" aria-label="Riproduci ${ep.title}">
-      <div class="ep-header">
-        <span class="ep-badge ${ep.badgeClass}">${ep.label === 'Opinione' ? 'Opinione' : 'Indignato'}</span>
-        <span class="ep-date">${formatDate(ep.pubDate)}</span>
-      </div>
-      <div class="ep-title">${ep.title}</div>
-      <div class="ep-footer">
-        ${ep.duration ? `<span class="ep-duration">${formatDuration(ep.duration)}</span>` : ''}
-        <div class="ep-playing-indicator" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </div>
-      </div>
-    </div>
-  `).join('');
+  if (!sets.length) {
+    list.innerHTML = '<p class="empty-state">Nessun set disponibile.<br>Aggiungi MP3 al bucket R2 e aggiorna <code>sets.json</code>.</p>';
+    return;
+  }
 
-  // Re-attach click handlers
-  list.querySelectorAll('.episode-card').forEach((card, i) => {
-    card.addEventListener('click', () => playEpisode(episodes[i]));
-    card.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') playEpisode(episodes[i]);
-    });
+  // Check which are cached
+  const cacheStatus = await Promise.all(sets.map(s => isSetCached(s.audioUrl)));
+
+  list.innerHTML = sets.map((s, i) => {
+    const cached = cacheStatus[i];
+    return `
+      <div class="set-card ${cached ? 'cached' : ''}" data-guid="${escHtml(s.guid)}" data-idx="${i}">
+        <div class="set-main">
+          <div class="set-info">
+            <div class="set-title">${escHtml(s.title)}</div>
+            <div class="set-meta">
+              ${s.artist ? `<span>${escHtml(s.artist)}</span>` : ''}
+              ${s.pubDate ? `<span>${escHtml(formatDate(s.pubDate))}</span>` : ''}
+              ${s.duration ? `<span>${escHtml(formatDuration(s.duration))}</span>` : ''}
+              <span class="set-status ${cached ? 'offline' : 'streaming'}">
+                ${cached ? '✓ Offline' : '⬇ Online'}
+              </span>
+            </div>
+          </div>
+          <div class="set-actions">
+            ${cached
+              ? `<button class="set-btn delete" data-action="delete" title="Elimina">
+                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                 </button>`
+              : `<button class="set-btn download" data-action="download" title="Scarica per offline">
+                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                 </button>`
+            }
+          </div>
+        </div>
+        <div class="set-progress">
+          <div class="progress-track"><div class="progress-fill"></div></div>
+          <div class="progress-label">In download…</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Wire up handlers
+  list.querySelectorAll('.set-card').forEach(card => {
+    const idx = parseInt(card.dataset.idx, 10);
+    const set = sets[idx];
+
+    card.querySelector('.set-info').addEventListener('click', () => playItem(set));
+
+    const dlBtn = card.querySelector('[data-action="download"]');
+    if (dlBtn) {
+      dlBtn.addEventListener('click', async e => {
+        e.stopPropagation();
+        await handleDownload(card, set, sets);
+      });
+    }
+
+    const delBtn = card.querySelector('[data-action="delete"]');
+    if (delBtn) {
+      delBtn.addEventListener('click', async e => {
+        e.stopPropagation();
+        if (!confirm(`Eliminare "${set.title}" dalla memoria offline?`)) return;
+        await deleteSet(set);
+        await renderSets(sets);
+        await updateStorageInfo();
+      });
+    }
   });
 
-  // Restore playing card highlight if any
-  if (currentEpisode) updatePlayingCard(currentEpisode.guid);
+  if (currentItem) updatePlayingHighlight(currentItem.guid);
 }
 
-function showError(show) {
-  document.getElementById('error-msg').style.display = show ? 'flex' : 'none';
-  document.getElementById('episode-list').style.display = show ? 'none' : '';
+async function handleDownload(card, set, allSets) {
+  card.classList.add('downloading');
+  const fill = card.querySelector('.progress-fill');
+  const label = card.querySelector('.progress-label');
+  try {
+    await downloadSet(set, (received, total) => {
+      const pct = total ? (received / total) * 100 : 0;
+      fill.style.width = pct + '%';
+      label.textContent = total
+        ? `${formatBytes(received)} / ${formatBytes(total)} (${pct.toFixed(0)}%)`
+        : `${formatBytes(received)} scaricati…`;
+    });
+    await renderSets(allSets);
+    await updateStorageInfo();
+  } catch (err) {
+    label.textContent = `Errore: ${err.message}`;
+    setTimeout(() => card.classList.remove('downloading'), 2000);
+  }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════════════════════════════
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  document.querySelectorAll('.list').forEach(l => {
+    l.classList.toggle('active', l.dataset.list === tab);
+  });
+  document.body.classList.toggle('tab-sets-active', tab === 'sets');
+  document.getElementById('storage-info').style.display = tab === 'sets' ? 'block' : 'none';
+  try { localStorage.setItem('active_tab', tab); } catch {}
+  if (tab === 'sets') updateStorageInfo();
+}
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => switchTab(t.dataset.tab));
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  STATUS / LOAD
+// ═══════════════════════════════════════════════════════════════════════════
 
 function setStatus(msg) {
   document.getElementById('status-bar').textContent = msg;
 }
 
-// ── MAIN LOAD ────────────────────────────────────────────────────────────────
+function showSkeleton(listEl) {
+  listEl.innerHTML = Array.from({ length: 4 }, () => `
+    <div class="skeleton-card">
+      <div class="skeleton-line" style="height:12px; width:30%"></div>
+      <div class="skeleton-line" style="height:16px; width:85%"></div>
+      <div class="skeleton-line" style="height:11px; width:20%"></div>
+    </div>`).join('');
+}
+
 async function loadEpisodes(force = false) {
-  const refreshBtn = document.getElementById('refresh-btn');
-  refreshBtn.classList.add('loading');
-  showError(false);
-
-  // Show cached data immediately
-  const cached = loadCache();
+  const cached = loadCache(EP_CACHE_KEY, EP_CACHE_TS);
   if (cached) {
-    renderEpisodes(cached.episodes);
-    setStatus(`${cached.episodes.length} episodi — aggiornato in cache`);
-    if (!force && cached.fresh) {
-      refreshBtn.classList.remove('loading');
-      return;
-    }
-    setStatus('Aggiornamento in corso…');
+    renderEpisodes(cached.data);
+    if (!force && cached.fresh) return;
   } else {
-    showSkeleton();
-    setStatus('Caricamento episodi…');
+    showSkeleton(document.getElementById('episode-list'));
   }
-
   try {
-    const episodes = await fetchAllEpisodes();
-    saveCache(episodes);
-    renderEpisodes(episodes);
-    const last = episodes[0] ? formatDate(episodes[0].pubDate) : '';
-    setStatus(`${episodes.length} episodi · ultimo: ${last}`);
+    const eps = await fetchAllEpisodes();
+    saveCache(EP_CACHE_KEY, EP_CACHE_TS, eps);
+    renderEpisodes(eps);
   } catch (err) {
-    console.error('Load failed:', err);
+    console.error('Episodes load failed:', err);
     if (!cached) {
-      showError(true);
-      setStatus('');
-    } else {
-      setStatus('Aggiornamento fallito — mostrando cache');
+      document.getElementById('episode-list').innerHTML =
+        '<p class="empty-state">Impossibile caricare gli episodi.<br>Verifica connessione.</p>';
     }
-  } finally {
-    refreshBtn.classList.remove('loading');
   }
 }
 
-document.getElementById('refresh-btn').addEventListener('click', () => loadEpisodes(true));
-document.getElementById('retry-btn').addEventListener('click', () => loadEpisodes(true));
+async function loadDeejayTimeEpisodes(force = false) {
+  const cached = loadCache(DEEJAY_TIME_CACHE_KEY, DEEJAY_TIME_CACHE_TS);
+  if (cached) {
+    renderDeejayTimeEpisodes(cached.data);
+    if (!force && cached.fresh) return;
+  } else {
+    showSkeleton(document.getElementById('deejaytime-list'));
+  }
+  try {
+    const eps = await fetchDeejayTimeEpisodes();
+    saveCache(DEEJAY_TIME_CACHE_KEY, DEEJAY_TIME_CACHE_TS, eps);
+    renderDeejayTimeEpisodes(eps);
+  } catch (err) {
+    console.error('Deejay Time load failed:', err);
+    if (!cached) {
+      document.getElementById('deejaytime-list').innerHTML =
+        '<p class="empty-state">Impossibile caricare Deejay Time.<br>Verifica connessione.</p>';
+    }
+  }
+}
 
-// Service worker registration
+async function loadSets(force = false) {
+  const cached = loadCache(SETS_CACHE_KEY, SETS_CACHE_TS);
+  if (cached) {
+    renderSets(cached.data);
+    if (!force && cached.fresh) return;
+  } else {
+    showSkeleton(document.getElementById('set-list'));
+  }
+  try {
+    const sets = await fetchSetsManifest();
+    saveCache(SETS_CACHE_KEY, SETS_CACHE_TS, sets);
+    renderSets(sets);
+  } catch (err) {
+    console.warn('Sets load failed:', err);
+    if (!cached) renderSets([]);
+  }
+}
+
+async function refreshAll() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('loading');
+  setStatus('Aggiornamento in corso…');
+  await Promise.allSettled([loadEpisodes(true), loadDeejayTimeEpisodes(true), loadSets(true)]);
+  const ep = JSON.parse(localStorage.getItem(EP_CACHE_KEY) || '[]');
+  const dt = JSON.parse(localStorage.getItem(DEEJAY_TIME_CACHE_KEY) || '[]');
+  const ss = JSON.parse(localStorage.getItem(SETS_CACHE_KEY) || '[]');
+  setStatus(`${ep.length} Giacalone · ${dt.length} Deejay Time · ${ss.length} set`);
+  btn.classList.remove('loading');
+}
+
+document.getElementById('refresh-btn').addEventListener('click', refreshAll);
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════════════════
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(e => console.warn('SW:', e));
 }
 
-// Initial load
-loadEpisodes();
+// Restore last tab
+const lastTab = localStorage.getItem('active_tab') || 'giacalone';
+switchTab(lastTab);
+
+// Initial parallel load
+(async () => {
+  setStatus('Caricamento…');
+  await Promise.allSettled([loadEpisodes(false), loadDeejayTimeEpisodes(false), loadSets(false)]);
+  const ep = JSON.parse(localStorage.getItem(EP_CACHE_KEY) || '[]');
+  const dt = JSON.parse(localStorage.getItem(DEEJAY_TIME_CACHE_KEY) || '[]');
+  const ss = JSON.parse(localStorage.getItem(SETS_CACHE_KEY) || '[]');
+  setStatus(`${ep.length} Giacalone · ${dt.length} Deejay Time · ${ss.length} set`);
+  if (lastTab === 'sets') updateStorageInfo();
+})();
 </script>
 </body>
 </html>

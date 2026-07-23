@@ -1,12 +1,12 @@
 {
-  "name": "Giacalone Podcast",
-  "short_name": "Giacalone",
-  "description": "L'Opinione e L'Indignato Speciale di Davide Giacalone — RTL 102.5",
+  "name": "News & Sets",
+  "short_name": "News & Sets",
+  "description": "Podcast Giacalone, Deejay Time in streaming e DJ Sets offline",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#1a1a2e",
+  "background_color": "#0f0f1a",
   "theme_color": "#c8102e",
   "lang": "it",
   "icons": [
