@@ -1,10 +1,20 @@
-const SHELL_CACHE = 'shell-v3';
+const SHELL_CACHE = 'shell-v4';
 const DJ_CACHE = 'dj-sets-v1';
 const SHELL = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(SHELL_CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())
+    caches.open(SHELL_CACHE).then(cache =>
+      // cache: 'reload' bypasses the HTTP cache. addAll() can otherwise
+      // store a stale index.html in the new shell cache, and cache-first
+      // would keep serving it.
+      Promise.all(SHELL.map(url =>
+        fetch(new Request(url, { cache: 'reload' })).then(res => {
+          if (!res.ok) throw new Error('shell ' + res.status + ' ' + url);
+          return cache.put(url, res);
+        })
+      ))
+    ).then(() => self.skipWaiting())
   );
 });
 
@@ -28,7 +38,9 @@ self.addEventListener('fetch', e => {
 
   if (isShell) {
     e.respondWith(
-      caches.match(e.request).then(cached => cached || fetch(e.request))
+      caches.open(SHELL_CACHE).then(cache =>
+        cache.match(e.request).then(cached => cached || fetch(e.request))
+      )
     );
     return;
   }
